@@ -1,0 +1,56 @@
+import pandas as pd         #Importing Pandas library
+import numpy as np          #Impoorting numpy library
+
+data = pd.read_csv('sales_data.csv')     #Loading data set using Pandas
+print("Loading dataset using Pandas")
+print(data)            #Print all the rows from CSV file
+print("Performing data exploration using head")
+print(data.head())    #Returns the first 5 rows of the DataFrame.
+print(data.head(3))    #Returns the specified number of rows (3 rows)
+print("Performing data exploration using info")
+data.info()            #Returns the summary of the DataFrame#data.info(verbose,buf,max_cols,memory_usage,show_counts,null_counts)
+#data.info(verbose=False)    #Prints a summary of columns count but not per column information
+#data.info(verbose=True)      #Prints information of all columns:
+#data.info()
+print("Performing data exploration using describe")   
+print(data.describe())     #Prints statistical description of the data
+print("Use NumPy to compute mean, median, std of Sales");
+SalesData = data['Sales']
+mean = np.mean(SalesData)
+median = np.median(SalesData)
+std = np.std(SalesData)
+print(f"Mean of Sales: {mean}")
+print(f"Median of Sales: {median}")
+print(f"Std of Sales: {std}")
+print("Create Profit_Per_Unit column");
+data["Profit_per_unit"] = data["Profit"] / data["Quantity"]    #Creating new column
+print(data)
+#print(data["Profit_per_unit"])
+print("Filter sales greater than 250");
+filtered_data = data[data["Sales"]>250]       #Filter Sales > 250
+#filtered_data = data["Sales"]>250
+print(filtered_data)
+print(" Group by Region total Sales, avg Profit")
+print(data.groupby("Region").agg({"Sales":["sum"], "Profit":["mean"]})) 
+##Creating Pivot table
+print(" Create pivot table (Region vs Category)")
+table = pd.pivot_table(data, values = 'Sales',index ='Region' , columns='Category' ,aggfunc='sum')
+#table = pd.pivot_table(data, values = 'Sales',index ='Category' , columns='Region' ,aggfunc='sum')
+print(table)
+print("Handling Missing Numbers by filling with 0")
+print(table.fillna(0))
+print(" Sort by Profit descending")
+data_sorted = data.sort_values(by='Profit', ascending=False)  #Sort by Profit descending
+print(data_sorted)
+print(" Classify Sales (High/Medium/Low)")
+#range = [0, 150, 300, float('inf')]
+#data['Sales_Performance'] = pd.cut(data['Sales'],range, labels=['Low', 'Medium', 'High'])
+data['Sales_Performance'] = pd.qcut(data['Sales'],q=3, labels=['Low', 'Medium', 'High'])
+print(data)
+
+print("Finding top performing Region based on sales")
+top_region_Sales = data.groupby('Region')['Sales'].sum().idxmax()
+print(top_region_Sales)
+print("Finding top performing Region based on Profit")
+top_region_profit = data.groupby('Region')['Profit'].sum().idxmax()
+print(top_region_profit)
