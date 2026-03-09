@@ -1,0 +1,18 @@
+from pyspark.sql.functions import regexp_replace,split, when,trim,col,to_timestamp, to_utc_timestamp
+
+dbutils.fs.ls('/Volumes/workspace/default/adb_dataset/')     #File path (Copied from Catalog)
+df2=spark.read.csv('dbfs:/Volumes/workspace/default/adb_dataset/product.csv',header=True,inferSchema=True)
+display(df2)
+df2.withColumn("Name", split("Name", " - ").getItem(0)) \
+   .withColumn("Name", split("Name", ",").getItem(0)) \
+   .withColumn("Name",regexp_replace(col("Name"),col("Color"),""))\
+   .withColumn('Size', when(col('Size') == 'S', '28') \
+                        .when(col('Size') == 'M', '30') \
+                        .when(col('Size') == 'L', '32') \
+                        .when(col('Size') == 'XL', '34') \
+                        .when(col('Size').isNull() | (col('Size') == 'NULL'), '0') \
+                        .otherwise(col('Size')).cast('int')) \
+    .withColumn("ModifiedDate", to_utc_timestamp(to_timestamp("ModifiedDate",'mm:ss.S'),"UTC")).display() 
+
+df2.write.mode("overwrite").csv('/Volumes/workspace/default/adb_dataset/Output/product_data_csv')
+df2.write.mode("overwrite").parquet('/Volumes/workspace/default/adb_dataset/Output/product_data-parquet')
