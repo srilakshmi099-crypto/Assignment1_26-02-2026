@@ -1,0 +1,10 @@
+from pyspark.sql.functions import current_timestamp,concat,concat_ws,regexp_replace
+dbutils.fs.ls('/Volumes/workspace/default/adb_dataset/')     #File path lCopied from Catalog)
+df=spark.read.csv('dbfs:/Volumes/workspace/default/adb_dataset/CustomerSource.csv',header=True,inferSchema=True)
+df.withColumn("FullName",concat_ws(" ",'FirstName','MiddleName','Surname'))\
+  .withColumn("insertdate",current_timestamp())\
+  .drop('FirstName','MiddleName','Surname','Suffix')\
+  .withColumn("Contact",regexp_replace("Phone", r"[^0-9]", "").substr(-10, 10).cast('long'))\
+  .drop("Phone")\
+  .withColumn("SalesPerson", regexp_replace(("SalesPerson"), r"adventure-works\\\\", ""))\
+  .display()
