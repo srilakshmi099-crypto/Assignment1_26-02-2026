@@ -1,0 +1,24 @@
+import re
+
+dbutils.fs.ls('/Volumes/workspace/default/adb_dataset/')     #File path (Copied from Catalog)
+pdf=spark.read.csv('dbfs:/Volumes/workspace/default/adb_dataset/product.csv',header=True,inferSchema=True)
+display(pdf)
+cdf=spark.read.csv('dbfs:/Volumes/workspace/default/adb_dataset/customers.csv',header=True,inferSchema=True)
+odf=spark.read.csv('dbfs:/Volumes/workspace/default/adb_dataset/orders (2).csv',header=True,inferSchema=True)
+new_column_names = [re.sub(r'([a-z])([A-Z])', r'\1_\2', c) for c in pdf.columns]
+pdf = pdf.toDF(*new_column_names)
+pdf=pdf.toDF(*[c.lower() for c in pdf.columns])
+display(pdf)
+new_column_names1 = [re.sub(r'([a-z])([A-Z])', r'\1_\2', c) for c in cdf.columns]
+cdf = cdf.toDF(*new_column_names1)
+cdf=cdf.toDF(*[c.lower() for c in cdf.columns])
+display(cdf)
+new_column_names1 = [re.sub(r'([a-z])([A-Z])', r'\1_\2', c) for c in odf.columns]
+odf = odf.toDF(*new_column_names1)
+odf=odf.toDF(*[c.lower() for c in odf.columns])
+display(odf)
+odf.createOrReplaceTempView("ord")
+cdf.createOrReplaceTempView("customer")
+pdf.createOrReplaceTempView("product")
+spark.sql("select c.state,count(*) as total_count from ord o join customer c on o.customer_id=c.customer_id where o.delivery_status='Returned' group by c.state order by total_count desc").display()
+spark.sql("SELECT list_price,standard_cost, (list_price - standard_cost) AS price_diff FROM product").display()
