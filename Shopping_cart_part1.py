@@ -1,23 +1,36 @@
-Items= {
-    1: {"Itemname": "Biscuits", "costperItem": 12.50,"Quantity":10},
-    2: {"Itemname": "Cereals", "costperItem": 10, "Quantity":15},
-    3: {"Itemname": "Chicken", "costperItem": 15, "Quantity":50},
-    4: {"Itemname": "Coffee", "costperItem": 5.50,"Quantity":18},
-    5: {"Itemname": "Milk", "costperItem": 3.50,"Quantity":20}
-    
-}
+import mysql.connector
+
+conn = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    password="maggi@522",
+    database="grocery_store"
+)
+
+cursor = conn.cursor()
+Items = {}
+
+cursor.execute("SELECT * FROM items")
+rows = cursor.fetchall()
+
+for row in rows:
+    Items[row[0]] = {
+        "Itemname": row[1],
+        "costperItem": row[2],
+        "Quantity": row[3]
+    }
 
 print(Items.items())
 
-print(f"{'Sr.no':<10} {'Item':<15} {'Quantity':>10} {'Cost/Item':>15}")
+print(f"{'Sr.no':<10} {'Itemname':<15} {'costperItem':>10} {'Quantity':>15}")
 print("-" * 55)
 
 # 2. Print the Data Rows
 for sn, details in Items.items():
     name = details["Itemname"]
-    qty = details["Quantity"]
-    cost = details["costperItem"]    
-    print(f"{sn:<10} {name:<15} {qty:>10} {cost:>15}")
+    cost = details["costperItem"]
+    qty = details["Quantity"]    
+    print(f"{sn:<10} {name:<15} {cost:>10} {qty:>15}")
 
 isValidInput = False
 cart = {}
@@ -64,7 +77,7 @@ if len(cart)>0:
         customerName = input()
         print("Enter your Address:")
         customerAddress = input()
-        print("Enter your distance from the storer:")
+        print("Enter your distance from the store:")
         customerHomeDist = int(input())
         print(f"{'Sr.no':<10} {'Item':<15} {'Quantity':>10} {'Price':>15}")
         print("-" * 55)
@@ -102,7 +115,18 @@ for sn, details in Items.items():
     name = details["Itemname"]
     qty = details["Quantity"]
     cost = details["costperItem"]    
+    sql = "UPDATE items SET quantity = %s WHERE itemname = %s"
+    val = (qty, name)
+    cursor.execute(sql, val)
     print(f"{sn:<10} {name:<15} {qty:>10} {cost:>15}")
+cursor.execute(
+    "INSERT INTO orders (customer_name,address,distance,total_amount) VALUES (%s,%s,%s,%s)",
+    (customerName, customerAddress, customerHomeDist, totalPrice+deliverycharges)
+)
+
+conn.commit()
+cursor.close()
+conn.close()
 
 
 
